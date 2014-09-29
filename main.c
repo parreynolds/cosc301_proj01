@@ -1,6 +1,8 @@
 /*
  *
- * author name(s), date, and other info here
+ * Parker Reynolds
+ * 28 September 2014
+ * Worked wtih: Courtney McGill
  *
  */
 
@@ -9,7 +11,8 @@
 #include <unistd.h>
 #include <string.h>
 #include <errno.h>
-
+#include <sys/time.h>
+#include <sys/resource.h>
 #include "list.h"
 
 void process_data(FILE *input_file) {
@@ -18,9 +21,121 @@ void process_data(FILE *input_file) {
     // the fgets() C library function.  close it with the fclose()
     // built-in function
 
+    struct rusage usage;
 
 
+    struct node *list = malloc(sizeof(struct node*));
+    list = list->next;
 
+    char filestream[2000000];
+
+    if (input_file == stdin){
+	printf("Input a list of numbers \n");
+	while(fgets(filestream, 2000000, stdin)!= NULL){
+		int slen = strlen(filestream);
+		filestream[slen-1] = '\0';
+
+		char *token = strtok(filestream, " \t\n");
+    		if(token!=NULL){
+			int counter = 0;
+			for(int i=0; i<strlen(token); i++){
+				if(i==0 && (isdigit(token[i]) || token[i]=='-')){
+					counter++;
+				}
+				else if(isdigit(token[i])){
+					counter++;
+				}
+			}
+			if (counter == strlen(token)){
+				int num = atoi(token);
+				list_append(num, &list);
+			}
+    		}
+    
+    		while(token!=NULL){
+			token = strtok(NULL," \t\n");
+			if (token!=NULL){
+				int counter = 0;
+				for(int i=0; i<strlen(token); i++){
+					if(i==0 && (isdigit(token[i]) || token[i]=='-')){
+						counter++;
+					}
+					else if(isdigit(token[i])){
+						counter++;
+					}
+				}
+				if (counter == strlen(token)){
+					int num = atoi(token);
+				        list_append(num, &list);
+				}
+			}
+    		}
+	}
+	fflush(stdout);
+    }
+
+    else{
+        while(fgets(filestream, 2000000, input_file)!=NULL){
+		int slen = strlen(filestream);
+		filestream[slen-1] = '\0';
+
+		char *token = strtok(filestream," \t\n");
+    		if(token!=NULL){
+			int counter = 0;
+			for(int i=0; i<strlen(token); i++){
+				if(i==0 && (isdigit(token[i]) || token[i]=='-')){
+					counter++;
+				}
+				else if(isdigit(token[i])){
+					counter++;
+				}
+			}
+			if (counter == strlen(token)){
+				int num = atoi(token);
+				list_append(num, &list);
+			}
+                        if (token[0] == '#'){
+				token = strtok(NULL, "\n");
+			}
+    		}
+    
+    		while(token!=NULL){
+			token = strtok(NULL," \t\n");
+			if (token!=NULL){
+				int counter = 0;
+				for(int i=0; i<strlen(token); i++){
+					if(i==0 && (isdigit(token[i]) || token[i]=='-')){
+						counter++;
+					}
+					if(isdigit(token[i])){
+						counter++;
+					}
+				}
+				if (counter == strlen(token)){
+					int num = atoi(token);
+				        list_append(num, &list);
+				}
+				if (token[0] == '#'){
+					token = strtok(NULL, "\n");
+				}
+			}
+    		}
+	}
+	fflush(stdout);
+    }
+    
+    list_sort(&list);
+    list_print(list);
+    list_clear(list);
+  
+    getrusage(RUSAGE_SELF, &usage);
+    if (getrusage(RUSAGE_SELF, &usage) == -1){
+	fprintf(stderr, "Error with getrusage");
+        exit(1);
+    }
+    printf("User time: %ld.%09ld\n", usage.ru_utime.tv_sec, usage.ru_utime.tv_usec);
+    printf("System time: %ld.%09ld\n", usage.ru_stime.tv_sec, usage.ru_utime.tv_usec);
+   
 }
 
 
